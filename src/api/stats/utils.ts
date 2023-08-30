@@ -18,26 +18,48 @@ export const getOpening = (game: ParsedGame) => {
     .join(" ");
 };
 
-export const getMostPlayedOpenings = (games: ParsedGame[]) => {
-  const openings: { [key: string]: number } = {};
+export const getMostPlayedOpenings = (
+  games: ParsedGame[],
+  username: string
+) => {
+  const openings: { [key: string]: { count: number; wins: number } } = {};
 
   games.forEach((game) => {
     const opening = getOpening(game);
 
     if (opening) {
-      openings[opening] = openings[opening] ? openings[opening] + 1 : 1;
+      if (!openings[opening]) openings[opening] = { count: 0, wins: 0 };
+
+      if (
+        game.tags.Termination.toLowerCase().includes(
+          `${username.toLowerCase()} won`
+        )
+      ) {
+        openings[opening].wins = openings[opening].wins
+          ? openings[opening].wins + 1
+          : 1;
+      }
+      openings[opening].count = openings[opening].count
+        ? openings[opening].count + 1
+        : 1;
     }
   });
 
-  const sortedOpenings = Object.entries(openings).sort((a, b) => b[1] - a[1]);
+  const sortedOpenings = Object.entries(openings).sort(
+    (a, b) => b[1].count - a[1].count
+  );
 
-  return sortedOpenings.slice(0, 10);
+  return sortedOpenings.slice(0, 10).map((opening) => ({
+    name: opening[0],
+    count: opening[1].count,
+    wins: opening[1].wins,
+  }));
 };
 
 export const isPlayerWhite = (game: ParsedGame, username: string) => {
   if (!game.tags) return false;
 
-  return game.tags.White === username;
+  return game.tags.White.toLowerCase() === username.toLowerCase();
 };
 
 export const getAverageRatingByMonth = (
@@ -115,7 +137,11 @@ export const getLongestStreaks = (games: ParsedGame[], username: string) => {
   let currentLossStreak = 0;
 
   games.forEach((game) => {
-    if (game.tags.Termination.includes(`${username} won`)) {
+    if (
+      game.tags.Termination.toLowerCase().includes(
+        `${username.toLowerCase()} won`
+      )
+    ) {
       currentWinStreak++;
       currentLossStreak = 0;
     } else {
@@ -137,22 +163,61 @@ export const getMostPlayedOpponents = (
   username: string
 ) => {
   const opponents: { [key: string]: number } = {};
+  const opponentRatings: { [key: string]: number } = {};
+  const opponentRecords: { [key: string]: { wins: number; losses: number } } =
+    {};
 
   games.forEach((game) => {
-    const opponent = isPlayerWhite(game, username)
-      ? game.tags.Black
-      : game.tags.White;
+    let opponent = "";
+
+    if (isPlayerWhite(game, username)) {
+      opponent = game.tags.Black;
+      opponentRatings[opponent] = opponentRatings[opponent]
+        ? opponentRatings[opponent]
+        : Number(game.tags.BlackElo);
+    } else {
+      opponent = game.tags.White;
+      opponentRatings[opponent] = opponentRatings[opponent]
+        ? opponentRatings[opponent]
+        : Number(game.tags.WhiteElo);
+    }
+
+    if (
+      game.tags.Termination.toLowerCase().includes(
+        `${username.toLowerCase()} won`
+      )
+    ) {
+      opponentRecords[opponent] = opponentRecords[opponent]
+        ? {
+            wins: opponentRecords[opponent].wins + 1,
+            losses: opponentRecords[opponent].losses,
+          }
+        : { wins: 1, losses: 0 };
+    } else {
+      opponentRecords[opponent] = opponentRecords[opponent]
+        ? {
+            wins: opponentRecords[opponent].wins,
+            losses: opponentRecords[opponent].losses + 1,
+          }
+        : { wins: 0, losses: 1 };
+    }
 
     opponents[opponent] = opponents[opponent] ? opponents[opponent] + 1 : 1;
   });
 
   const sortedOpponents = Object.entries(opponents).sort((a, b) => b[1] - a[1]);
 
-  return sortedOpponents.slice(0, 5);
+  return sortedOpponents.slice(0, 5).map((opponent) => ({
+    name: opponent[0],
+    count: opponent[1],
+    rating: opponentRatings[opponent[0]],
+    wins: opponentRecords[opponent[0]].wins,
+    losses: opponentRecords[opponent[0]].losses,
+  }));
 };
 
 export const getYearResults = async (username: string, year: number) => {
-  const averageRatings: AverageRating[] = [];
+  const rawAverageRatings: AverageRating[] = [];
   const games: ParsedGame[] = [];
   const hoursPlayed: { month: number; hoursPlayed: number }[] = [];
 
@@ -160,12 +225,25 @@ export const getYearResults = async (username: string, year: number) => {
     await delay(0);
 
     const monthResults = await getMonthResults(username, year, i);
-    averageRatings.push(monthResults.averageRating);
+    rawAverageRatings.push(monthResults.averageRating);
     games.push(...monthResults.parsedGames);
     hoursPlayed.push(monthResults.hoursPlayed);
   }
 
-  const openings = getMostPlayedOpenings(games);
+  const filteredAverageRatings = rawAverageRatings.filter(
+    (rating) => rating.averageRating > 0
+  );
+  const yearAverageRating = Math.floor(
+    filteredAverageRatings.reduce((a, b) => a + b.averageRating, 0) /
+      filteredAverageRatings.length
+  );
+  const averageRatings = rawAverageRatings.map((rating) => ({
+    month: rating.month,
+    averageRating:
+      rating.averageRating === 0 ? yearAverageRating : rating.averageRating,
+  }));
+
+  const openings = getMostPlayedOpenings(games, username);
   const highestRatings = getHighestRatings(games, username);
   const streaks = getLongestStreaks(games, username);
 
@@ -185,7 +263,6 @@ export const getYearResults = async (username: string, year: number) => {
     streaks,
     mostPlayedOpponents,
     openings,
-    sampleGame: games[0],
   };
 };
 
