@@ -7,7 +7,7 @@ import {
 import { getChessComMonthURL, parsePgn } from "../utils";
 import fetch from "node-fetch";
 
-import { DateTime, Duration } from "luxon";
+import { DateTime } from "luxon";
 
 export const getOpening = (game: ParsedGame) => {
   if (!game.tags?.ECOUrl) return null;
@@ -34,13 +34,13 @@ export const getMostPlayedOpenings = (games: ParsedGame[]) => {
   return sortedOpenings.slice(0, 10);
 };
 
-const isPlayerWhite = (game: ParsedGame, username: string) => {
+export const isPlayerWhite = (game: ParsedGame, username: string) => {
   if (!game.tags) return false;
 
   return game.tags.White === username;
 };
 
-const getAverageRatingByMonth = (
+export const getAverageRatingByMonth = (
   games: ParsedGame[],
   username: string,
   month: number
@@ -107,13 +107,57 @@ export const verifyUserExists = async (username: string) => {
   }
 };
 
+export const getLongestStreaks = (games: ParsedGame[], username: string) => {
+  let longestWinStreak = 0;
+  let longestLossStreak = 0;
+
+  let currentWinStreak = 0;
+  let currentLossStreak = 0;
+
+  games.forEach((game) => {
+    if (game.tags.Termination.includes(`${username} won`)) {
+      currentWinStreak++;
+      currentLossStreak = 0;
+    } else {
+      currentLossStreak++;
+      currentWinStreak = 0;
+    }
+
+    if (currentWinStreak > longestWinStreak)
+      longestWinStreak = currentWinStreak;
+    if (currentLossStreak > longestLossStreak)
+      longestLossStreak = currentLossStreak;
+  });
+
+  return { longestWinStreak, longestLossStreak };
+};
+
+export const getMostPlayedOpponents = (
+  games: ParsedGame[],
+  username: string
+) => {
+  const opponents: { [key: string]: number } = {};
+
+  games.forEach((game) => {
+    const opponent = isPlayerWhite(game, username)
+      ? game.tags.Black
+      : game.tags.White;
+
+    opponents[opponent] = opponents[opponent] ? opponents[opponent] + 1 : 1;
+  });
+
+  const sortedOpponents = Object.entries(opponents).sort((a, b) => b[1] - a[1]);
+
+  return sortedOpponents.slice(0, 5);
+};
+
 export const getYearResults = async (username: string, year: number) => {
   const averageRatings: AverageRating[] = [];
   const games: ParsedGame[] = [];
   const hoursPlayed: { month: number; hoursPlayed: number }[] = [];
 
   for (let i = 0; i < 12; i++) {
-    await delay(200);
+    await delay(0);
 
     const monthResults = await getMonthResults(username, year, i);
     averageRatings.push(monthResults.averageRating);
@@ -123,12 +167,24 @@ export const getYearResults = async (username: string, year: number) => {
 
   const openings = getMostPlayedOpenings(games);
   const highestRatings = getHighestRatings(games, username);
+  const streaks = getLongestStreaks(games, username);
+
+  const totalGames = {
+    bullet: getTotalGamesPerTimeClass(games, "bullet"),
+    blitz: getTotalGamesPerTimeClass(games, "blitz"),
+    rapid: getTotalGamesPerTimeClass(games, "rapid"),
+  };
+
+  const mostPlayedOpponents = getMostPlayedOpponents(games, username);
 
   return {
     averageRatings,
-    openings,
     highestRatings,
     hoursPlayed,
+    totalGames,
+    streaks,
+    mostPlayedOpponents,
+    openings,
     sampleGame: games[0],
   };
 };
@@ -158,6 +214,13 @@ export const getHighestRatings = (games: ParsedGame[], username: string) => {
     highestBlitzRating,
     highestRapidRating,
   };
+};
+
+export const getTotalGamesPerTimeClass = (
+  games: ParsedGame[],
+  timeClass: TimeClass
+) => {
+  return games.filter((game) => getTimeClass(game) === timeClass).length;
 };
 
 export const getHighestRatingByTimeClass = (
@@ -194,10 +257,16 @@ export const getHoursPlayedByMonth = (games: ParsedGame[], month: number) => {
     const startTime = DateTime.fromFormat(game.tags.StartTime, "h:mm:ss");
     const endTime = DateTime.fromFormat(game.tags.EndTime, "h:mm:ss");
 
-    secondsPlayed += startTime.diff(endTime, "seconds").as("seconds");
+    const timeDifference = endTime.diff(startTime, "seconds").as("seconds");
+
+    if (timeDifference < 0) {
+      return (secondsPlayed += timeDifference + 86400);
+    }
+
+    return (secondsPlayed += timeDifference);
   });
 
-  return { month, hoursPlayed: secondsPlayed };
+  return { month, hoursPlayed: Math.floor((secondsPlayed / 3600) * 10) / 10 };
 };
 
 export const getTimeClass = (game: ParsedGame): TimeClass => {
