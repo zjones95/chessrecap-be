@@ -12,7 +12,11 @@ export type TimeClass = "bullet" | "blitz" | "rapid" | "daily";
 
 export type TotalGamesKey = Exclude<TimeClass, "daily">;
 
-export type StreaksKey = "longestWinStreak" | "longestLossStreak";
+export type StreaksKey =
+  | "longestWinStreak"
+  | "longestLossStreak"
+  | "currentWinStreak"
+  | "currentLossStreak";
 
 export type Pgn = string;
 

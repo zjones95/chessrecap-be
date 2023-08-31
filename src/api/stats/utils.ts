@@ -58,8 +58,6 @@ export const getMonth = async (
   openings: Record<string, Opening>,
   streaks: Record<StreaksKey, number>
 ) => {
-  let currentWinStreak = 0;
-  let currentLossStreak = 0;
   const averageRatingsMonth: AverageRatingsMonth = {
     month,
     averageRating: 0,
@@ -172,17 +170,17 @@ export const getMonth = async (
       }
 
       if (didPlayerWin(username, game.tags.Termination)) {
-        currentWinStreak++;
-        currentLossStreak = 0;
+        streaks.currentWinStreak++;
+        streaks.currentLossStreak = 0;
       } else {
-        currentLossStreak++;
-        currentWinStreak = 0;
+        streaks.currentLossStreak++;
+        streaks.currentWinStreak = 0;
       }
 
-      if (currentWinStreak > streaks.longestWinStreak)
-        streaks.longestWinStreak = currentWinStreak;
-      if (currentLossStreak > streaks.longestLossStreak)
-        streaks.longestLossStreak = currentLossStreak;
+      if (streaks.currentWinStreak > streaks.longestWinStreak)
+        streaks.longestWinStreak = streaks.currentWinStreak;
+      if (streaks.currentLossStreak > streaks.longestLossStreak)
+        streaks.longestLossStreak = streaks.currentLossStreak;
     });
   } catch (err) {
     console.log({ err });
@@ -215,6 +213,8 @@ export const getYear = async (username: string, year: number) => {
   const streaks: Record<StreaksKey, number> = {
     longestWinStreak: 0,
     longestLossStreak: 0,
+    currentWinStreak: 0,
+    currentLossStreak: 0,
   };
 
   for (let i = 0; i < 12; i++) {
@@ -247,7 +247,10 @@ export const getYear = async (username: string, year: number) => {
     highestRatings,
     hoursPlayed,
     totalGames,
-    streaks,
+    streaks: {
+      longestWinStreak: streaks.longestWinStreak,
+      longestLossStreak: streaks.longestLossStreak,
+    },
     opponents: formattedOpponents,
     openings: formattedOpenings,
   };
