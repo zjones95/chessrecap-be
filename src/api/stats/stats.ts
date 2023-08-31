@@ -1,5 +1,5 @@
 import express from "express";
-import { getYearResults, verifyUserExists } from "./utils";
+import { getYear, verifyUserExists } from "./utils";
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ router.get<StatsUsernameYearParams, any>(
         .json({ message: "User does not exist or the chess.com API is down" });
     }
 
-    const yearResults = await getYearResults(username, Number(year));
+    const yearResults = await getYear(username, Number(year));
 
     res.json({
       ...yearResults,

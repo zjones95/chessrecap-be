@@ -10,7 +10,36 @@ export interface GamePlayer {
 
 export type TimeClass = "bullet" | "blitz" | "rapid" | "daily";
 
+export type TotalGamesKey = Exclude<TimeClass, "daily">;
+
+export type StreaksKey = "longestWinStreak" | "longestLossStreak";
+
 export type Pgn = string;
+
+export interface HoursPlayedMonth {
+  month: number;
+  hoursPlayed: number;
+}
+
+export interface AverageRatingsMonth {
+  month: number;
+  averageRating: number;
+}
+
+export interface Opening {
+  name: string;
+  wins: number;
+  count: number;
+}
+
+export interface Opponent {
+  name: string;
+  rating: number;
+  wins: number;
+  count: number;
+}
+
+export type HighestRatingsKey = "bullet" | "blitz" | "rapid";
 
 export interface Game {
   url: string;
@@ -37,6 +66,7 @@ type ParsedTags = NonNullable<ParseTree["tags"]> & {
 
 export interface ParsedGame extends Omit<ParseTree, "Tags"> {
   tags: ParsedTags;
+  timeClass: "bullet" | "blitz" | "rapid";
 }
 
 export interface ParsedResult {
