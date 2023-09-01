@@ -12,11 +12,7 @@ const app = express();
 
 app.use(morgan("dev"));
 app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.CORS_ALLOWED_ORIGIN,
-  })
-);
+app.use(cors());
 app.use(json());
 
 app.use("/", api);
