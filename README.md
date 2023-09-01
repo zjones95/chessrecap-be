@@ -14,7 +14,7 @@ Technologies used:
 
 First, clone the repo and run the command:
 
-`npm i`
+`npm install`
 
 Then, populate the following secrets in a .env file in the root directory
 
