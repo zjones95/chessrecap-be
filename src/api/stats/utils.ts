@@ -187,7 +187,7 @@ export const getMonth = async (
   }
 
   hoursPlayedMonth.hoursPlayed = Number(
-    hoursPlayedMonth.hoursPlayed.toFixed(2)
+    hoursPlayedMonth.hoursPlayed.toFixed(1)
   );
   hoursPlayed.push(hoursPlayedMonth);
   averageRatings.push(averageRatingsMonth);
@@ -237,15 +237,19 @@ export const getYear = async (username: string, year: number) => {
   const filteredAverageRatings = rawAverageRatings.filter(
     (rating) => rating.averageRating > 0
   );
-  const yearAverageRating = Math.floor(
-    filteredAverageRatings.reduce((a, b) => a + b.averageRating, 0) /
-      filteredAverageRatings.length
-  );
+  const yearAverageRating =
+    filteredAverageRatings.length > 0
+      ? Math.floor(
+          filteredAverageRatings.reduce((a, b) => a + b.averageRating, 0) /
+            filteredAverageRatings.length
+        )
+      : 0;
   const averageRatings = rawAverageRatings.map((rating) => ({
     month: rating.month,
     averageRating:
       rating.averageRating === 0 ? yearAverageRating : rating.averageRating,
   }));
+  console.log(yearAverageRating, rawAverageRatings);
 
   const formattedOpenings = Object.values(openings)
     .sort((a, b) => b.count - a.count)
