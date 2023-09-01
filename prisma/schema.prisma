@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AverageRating {
+  id            Int    @id @default(autoincrement())
+  month         Int
+  averageRating Float
+  recap         Recap  @relation(fields: [recapId], references: [id])
+  recapId       String
+}
+
+model HoursPlayed {
+  id          Int    @id @default(autoincrement())
+  month       Int
+  hoursPlayed Float
+  recap       Recap  @relation(fields: [recapId], references: [id])
+  recapId     String
+}
+
+model Opponent {
+  id      Int    @id @default(autoincrement())
+  name    String
+  wins    Int
+  rating  Int
+  count   Int
+  recap   Recap  @relation(fields: [recapId], references: [id])
+  recapId String
+}
+
+model Opening {
+  id      Int    @id @default(autoincrement())
+  name    String
+  wins    Int
+  count   Int
+  recap   Recap  @relation(fields: [recapId], references: [id])
+  recapId String
+}
+
+model Recap {
+  id             String          @id // Using name as the primary key
+  // Define your relationships
+  averageRatings AverageRating[]
+  highestRatings Json // You can store JSON data as-is in the database
+  hoursPlayed    HoursPlayed[]
+  totalGames     Json
+  streaks        Json
+  opponents      Opponent[]
+  openings       Opening[]
+}
