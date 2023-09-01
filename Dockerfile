@@ -18,8 +18,6 @@ COPY . .
 COPY prisma .
 RUN npx prisma generate
 
-RUN npx prisma migrate deploy
-
 EXPOSE 5000
 
 CMD [ "node", "dist/index.js" ]

@@ -75,7 +75,10 @@ router.get<StatsUsernameYearParams, any>(
     if (!userExists) {
       return res
         .status(404)
-        .json({ message: "User does not exist or the chess.com API is down" });
+        .json({
+          status: 404,
+          message: "User does not exist or the chess.com API is down",
+        });
     }
 
     const yearResults = await getYear(username, Number(year));
