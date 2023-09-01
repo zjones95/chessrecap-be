@@ -194,7 +194,7 @@ export const getMonth = async (
 };
 
 export const getYear = async (username: string, year: number) => {
-  const averageRatings: AverageRatingsMonth[] = [];
+  const rawAverageRatings: AverageRatingsMonth[] = [];
   const highestRatings: Record<HighestRatingsKey, number> = {
     bullet: 0,
     blitz: 0,
@@ -225,7 +225,7 @@ export const getYear = async (username: string, year: number) => {
       year,
       i,
       highestRatings,
-      averageRatings,
+      rawAverageRatings,
       hoursPlayed,
       totalGames,
       opponents,
@@ -233,6 +233,19 @@ export const getYear = async (username: string, year: number) => {
       streaks
     );
   }
+
+  const filteredAverageRatings = rawAverageRatings.filter(
+    (rating) => rating.averageRating > 0
+  );
+  const yearAverageRating = Math.floor(
+    filteredAverageRatings.reduce((a, b) => a + b.averageRating, 0) /
+      filteredAverageRatings.length
+  );
+  const averageRatings = rawAverageRatings.map((rating) => ({
+    month: rating.month,
+    averageRating:
+      rating.averageRating === 0 ? yearAverageRating : rating.averageRating,
+  }));
 
   const formattedOpenings = Object.values(openings)
     .sort((a, b) => b.count - a.count)
