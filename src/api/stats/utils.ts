@@ -209,7 +209,6 @@ export const getYear = async (username: string, year: number) => {
   const opponents: Record<string, Opponent> = {};
   const openings: Record<string, Opening> = {};
 
-  //
   const streaks: Record<StreaksKey, number> = {
     longestWinStreak: 0,
     longestLossStreak: 0,
@@ -249,7 +248,6 @@ export const getYear = async (username: string, year: number) => {
     averageRating:
       rating.averageRating === 0 ? yearAverageRating : rating.averageRating,
   }));
-  console.log(yearAverageRating, rawAverageRatings);
 
   const formattedOpenings = Object.values(openings)
     .sort((a, b) => b.count - a.count)
