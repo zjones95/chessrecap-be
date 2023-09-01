@@ -9,6 +9,7 @@ Technologies used:
 * helmet
 * luxon
 * morgan
+* docker
 
 ## Starting the app
 
