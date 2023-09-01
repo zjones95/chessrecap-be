@@ -1,4 +1,4 @@
-# ChessRecap - Frontend
+# ChessRecap - Backend
 
 This is the chessrecap backend repo, it's currently deployed via fly.io.
 
