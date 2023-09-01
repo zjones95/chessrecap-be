@@ -14,6 +14,8 @@ COPY --from=build-image ./usr/src/app/dist ./dist
 RUN npm ci --production
 COPY . .
 
+COPY .env .
+
 # Generate Prisma Client
 COPY prisma .
 RUN npx prisma generate
