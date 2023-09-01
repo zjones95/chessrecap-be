@@ -14,9 +14,6 @@ COPY --from=build-image ./usr/src/app/dist ./dist
 RUN npm ci --production
 COPY . .
 
-ENV DATABASE_URL="postgres://chessyear:PeNhrDghkO9d3Fj@chessrecap-db.flycast:5432/chessyear?sslmode=disable"
-
-
 # Generate Prisma Client
 COPY prisma .
 RUN npx prisma generate
