@@ -28,6 +28,8 @@ export const getPlayerRating = (
 };
 
 export const getOpening = (ECOUrl: string) => {
+  if (!ECOUrl) return null;
+
   const openingSplit = ECOUrl.match(/([A-Z])\w([^0-9-])+/g);
   if (!openingSplit) return null;
 
