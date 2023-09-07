@@ -222,7 +222,7 @@ export const getYear = async (username: string, year: number) => {
     await delay(0);
 
     await getMonth(
-      username,
+      username.toLowerCase(),
       year,
       i,
       highestRatings,
